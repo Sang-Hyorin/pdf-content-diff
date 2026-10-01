@@ -28,5 +28,5 @@ for name,text in [('older.pdf',old),('newer.pdf',new)]:
 info=build(OUT/'older.pdf',OUT/'newer.pdf',OUT/'comparison.pdf')
 with fitz.open(info['output']) as doc:
     (ROOT/'docs').mkdir(exist_ok=True)
-    doc[0].get_pixmap(matrix=fitz.Matrix(1.2,1.2),clip=fitz.Rect(0,0,1190,390),alpha=False).save(ROOT/'docs'/'preview.png')
+    doc[0].get_pixmap(matrix=fitz.Matrix(1.2,1.2),clip=doc[0].rect,alpha=False).save(ROOT/'docs'/'preview.png')
 print(info)

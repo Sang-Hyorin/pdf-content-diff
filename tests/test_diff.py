@@ -90,5 +90,27 @@ class PDFChecks(unittest.TestCase):
         blank=self.root/'blank.pdf';pdf(blank,'')
         with self.assertRaises(ValueError):build(self.old,blank,self.root/'blank-review.pdf')
 
+    def test_full_pages_keep_one_scale_and_do_not_stack(self):
+        for file, values in [(self.old, ['old alpha', 'old beta', 'old gamma']),
+                             (self.new, ['new alpha', 'new beta', 'new gamma'])]:
+            doc=fitz.open()
+            for text in values:
+                page=doc.new_page()
+                page.insert_text((100,100),text,fontsize=12)
+                page.insert_text((100,700),'Unchanged bottom context',fontsize=12)
+            doc.save(file);doc.close()
+        build(self.old,self.new,self.out)
+        with fitz.open(self.out) as doc:
+            self.assertEqual(len(doc),3)
+            sizes=[]
+            for page in doc:
+                self.assertIn('Unchanged bottom context',page.get_text())
+                for block in page.get_text('dict')['blocks']:
+                    for line in block.get('lines',[]):
+                        sizes.extend(s['size'] for s in line['spans'] if 'bottom context' in s['text'])
+            self.assertEqual(len(sizes),6)
+            self.assertLess(max(sizes)-min(sizes),0.001)
+            self.assertLess(max(sizes),12)
+
 
 if __name__=='__main__':unittest.main()

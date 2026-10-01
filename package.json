@@ -1,9 +1,9 @@
 {
   "name": "pdf-content-diff",
   "displayName": "PDF Content Diff",
-  "description": "Review actual text edits in compact, side-by-side vector PDFs. Skip manuscript line numbers and text reflow.",
+  "description": "Full-page side-by-side vector PDF comparisons with consistent scale and automatic refresh.",
   "publisher": "pdf-content-tools",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "engines": {
     "vscode": "^1.85.0"
   },

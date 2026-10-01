@@ -10,7 +10,7 @@ from pathlib import Path
 import fitz
 from backend import compare
 
-RECIPE = 'pdf-content-diff-0.5.0'
+RECIPE = 'pdf-content-diff-0.6.0-full-pages'
 
 
 def digest(file):
@@ -36,29 +36,6 @@ def groups(result):
     return sorted(components, key=lambda c: min(p for _, p in c))
 
 
-def abstract_clips(doc):
-    clips = {}; active = False
-    for p, page in enumerate(doc):
-        words = page.get_text('words', sort=True)
-        heading = next((w for w in words if w[4] == 'Abstract'), None)
-        intro = next((w for w in words if w[4] == 'Introduction'), None)
-        if heading:
-            active = True
-        if not active:
-            continue
-        lower = heading[1]-4 if heading else 0
-        upper = intro[1]-3 if intro else page.rect.height-75
-        selected = [w for w in words if .14*page.rect.width < w[0] and
-                    w[2] < .9*page.rect.width and w[1] >= lower and w[3] <= upper]
-        if selected:
-            clips[p] = fitz.Rect(.115*page.rect.width,
-                lower if heading else min(w[1] for w in selected)-4,
-                .875*page.rect.width, max(w[3] for w in selected)+5)
-        if intro:
-            break
-    return clips
-
-
 def build(old_file, new_file, output):
     started = time.perf_counter()
     old_file, new_file, output = map(Path, (old_file, new_file, output))
@@ -80,7 +57,6 @@ def build(old_file, new_file, output):
         raise ValueError('Both PDFs must contain extractable text')
     old, new = fitz.open(old_file), fitz.open(new_file)
     docs = {'left': old, 'right': new}
-    abstracts = {side: abstract_clips(doc) for side, doc in docs.items()}
     for side, doc in docs.items():
         colour = (1, .60, .64) if side == 'left' else (1, .84, .20)
         for page, marks in result[side]['marks'].items():
@@ -88,38 +64,30 @@ def build(old_file, new_file, output):
                 r = fitz.Rect(mark['rect']); r.x0 -= .6; r.x1 += .6
                 doc[page].draw_rect(r, color=None, fill=colour, fill_opacity=.42, overlay=True)
     review = fitz.open()
+    # One document-wide scale, independent of changed-region size and page count.
+    scale = min(min(540 / page.rect.width, 728 / page.rect.height)
+                for doc in docs.values() for page in doc)
     for index, nodes in enumerate(groups(result)):
-        is_abstract = all(p in abstracts[side] and
-            all(abstracts[side][p].contains(fitz.Rect(m['rect'])) for m in result[side]['marks'][p])
-            for side, p in nodes)
-        clips = {}
-        for side in ('left', 'right'):
-            clips[side] = []
-            for p in sorted(p for s, p in nodes if s == side):
-                page = docs[side][p]
-                if is_abstract:
-                    clip = abstracts[side][p]
-                else:
-                    rects = [fitz.Rect(m['rect']) for m in result[side]['marks'][p]]
-                    clip = fitz.Rect(min(r.x0 for r in rects)-20, min(r.y0 for r in rects)-24,
-                                     max(r.x1 for r in rects)+20, max(r.y1 for r in rects)+20) & page.rect
-                clips[side].append((p, clip))
-        scale = min([540/c.width for values in clips.values() for _, c in values] +
-                    [(728-12*(len(values)-1))/sum(c.height for _, c in values)
-                     for values in clips.values() if values])
-        page = review.new_page(width=1190, height=842)
-        title = 'Abstract revision: before and after' if is_abstract else f'Content revision {index+1}: before and after'
-        page.insert_text((30,26), title, fontname='hebo', fontsize=16)
-        page.insert_text((30,45), 'Red: removed or replaced text. Yellow: added or replacement text.', fontsize=10)
-        for side, x, label in [('left',30,'Before'), ('right',620,'After')]:
-            originals = ', '.join(str(p+1) for p, _ in clips[side]) or 'none'
-            page.insert_text((x,71), f'{label} - original page {originals}', fontname='hebo', fontsize=13)
-            y = 84
-            for p, clip in clips[side]:
-                destination = fitz.Rect(x, y, x+clip.width*scale, y+clip.height*scale)
-                page.show_pdf_page(destination, docs[side], p, clip=clip)
-                y = destination.y1+12
-        page.draw_line((595,61),(595,812),color=(.8,.8,.8),width=.5)
+        originals = {side: sorted(p for s, p in nodes if s == side)
+                     for side in ('left', 'right')}
+        # Never squeeze multiple original pages into a single review sheet.
+        for part in range(max(map(len, originals.values()))):
+            page = review.new_page(width=1190, height=842)
+            page.insert_text((30,26), f'Content revision {index+1}: before and after', fontname='hebo', fontsize=16)
+            page.insert_text((30,45), 'Red: removed or replaced text. Yellow: added or replacement text.', fontsize=10)
+            for side, x, label in [('left',30,'Before'), ('right',620,'After')]:
+                if part >= len(originals[side]):
+                    page.insert_text((x,71), f'{label} - no corresponding changed page', fontname='hebo', fontsize=13)
+                    continue
+                p = originals[side][part]
+                source = docs[side][p]
+                page.insert_text((x,71), f'{label} - original page {p+1}', fontname='hebo', fontsize=13)
+                width, height = source.rect.width*scale, source.rect.height*scale
+                left = x + (540-width)/2
+                destination = fitz.Rect(left,84,left+width,84+height)
+                if source.get_contents():
+                    page.show_pdf_page(destination, docs[side], p)
+            page.draw_line((595,61),(595,812),color=(.8,.8,.8),width=.5)
     if not len(review):
         page = review.new_page(width=1190,height=842)
         page.insert_text((30,40),'No text changes detected.',fontsize=16)

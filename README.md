@@ -10,7 +10,7 @@
 
 PDF revisions often shift line numbers, line breaks and page boundaries.
 PDF Content Diff compares extracted text across the document, then places the
-actual edits on the original vector content in a clean side-by-side review PDF.
+actual edits on complete original pages in a clean side-by-side review PDF.
 
 ![Synthetic before-and-after example](docs/preview.png)
 
@@ -40,10 +40,8 @@ python -m pip install -r requirements.txt
 python build_comparison.py older.pdf newer.pdf comparison.pdf
 ```
 
-Open `comparison.pdf` in any PDF reader. It contains changed regions with
-surrounding context. If there are no text changes, it says so on one page.
-When changes are confined to a recognizable Abstract section, that section
-is shown in full on both sides.
+Open `comparison.pdf` in any PDF reader. It contains complete changed pages at one document-wide scale. If there are no text changes, it says so on one page.
+Each review sheet holds at most one complete page per side. Extra pages continue on new sheets.
 
 For a machine-readable result with source-coordinate rectangles:
 
@@ -81,13 +79,10 @@ produce imperfect alignment. Review important equations against the source.
 
 Line-number and page-number detection uses positional heuristics. Alphabetic
 hyphens are normalized, so a change consisting only of a hyphen may be ignored.
-Exact moved text is suppressed when it meets the movement threshold. A crop
-may include unchanged text or nearby graphics as context. Separate changed
-regions on the same linked source pages can share a comparison sheet.
+Exact moved text is suppressed when it meets the movement threshold. Complete pages include unchanged text and graphics as context. Only changed words are highlighted.
 
 The current layout targets research manuscripts. It uses a landscape review
-sheet and can reduce text size for very long linked regions; use your reader's
-zoom for detail. No claim of universal semantic equivalence is made.
+sheet with a single common scale for all source pages; use your reader's zoom for detail. No claim of universal semantic equivalence is made.
 
 ## Development
 

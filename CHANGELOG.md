@@ -1,3 +1,8 @@
+# 0.6.0
+
+- Show complete changed pages at one document-wide scale.
+- Continue linked revisions on separate sheets instead of stacking or cropping pages.
+
 # 0.5.1
 
 - Use neutral project identifiers and contributor attribution.
