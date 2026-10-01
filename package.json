@@ -1,0 +1,92 @@
+{
+  "name": "pdf-content-diff",
+  "displayName": "PDF Content Diff",
+  "description": "Review actual text edits in compact, side-by-side vector PDFs. Skip manuscript line numbers and text reflow.",
+  "publisher": "pdf-content-tools",
+  "version": "0.5.1",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "pdf",
+    "diff",
+    "manuscript",
+    "latex",
+    "review"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "main": "./extension.js",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sang-Hyorin/pdf-content-diff.git"
+  },
+  "homepage": "https://github.com/Sang-Hyorin/pdf-content-diff#readme",
+  "bugs": {
+    "url": "https://github.com/Sang-Hyorin/pdf-content-diff/issues"
+  },
+  "scripts": {
+    "check": "node --check extension.js",
+    "test": "node --test tests/auto_refresh.test.js"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "pdfContentDiff.compare",
+        "title": "PDF Content Diff: Compare Two PDFs"
+      },
+      {
+        "command": "pdfContentDiff.compareLast",
+        "title": "PDF Content Diff: Compare Last Pair"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "pdfContentDiff.compare",
+          "when": "resourceExtname == .pdf",
+          "group": "3_compare"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "PDF Content Diff",
+      "properties": {
+        "pdfContentDiff.pythonPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine-overridable",
+          "description": "Python executable with PyMuPDF. Empty uses python on Windows and python3 elsewhere. For Remote SSH, configure the remote Python."
+        },
+        "pdfContentDiff.autoRefresh": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically rebuild the last comparison when either input PDF changes."
+        },
+        "pdfContentDiff.refreshDelay": {
+          "type": "number",
+          "default": 1500,
+          "minimum": 500,
+          "description": "Wait this many milliseconds after input files stop changing before rebuilding."
+        },
+        "pdfContentDiff.watchPair": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional older/newer file URIs to watch on startup in this workspace."
+        }
+      }
+    }
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ]
+}

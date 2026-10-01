@@ -1,0 +1,13 @@
+.git/**
+.github/**
+.venv/**
+node_modules/**
+__pycache__/**
+tests/**
+examples/**
+scripts/**
+docs/**
+dist/**
+build/**
+*.vsix
+*.pdf
