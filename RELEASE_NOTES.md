@@ -1,1 +1,1 @@
-Full-page comparisons at one document-wide scale. Each sheet contains at most one original page per side; only changed words are highlighted. Automatic refresh remains supported.
+Vector drawing changes are outlined in blue. Common outer whitespace is removed using one document-wide content boundary; body text retains its original point size. Dense vector pages are compared as a whole group. Raster image changes are outside the current scope.

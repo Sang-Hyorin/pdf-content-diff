@@ -1,3 +1,8 @@
+# 0.7.0
+
+- Detect changed vector drawing groups and outline them in blue.
+- Trim shared outer whitespace while retaining one uniform layout and original font sizes.
+
 # 0.6.0
 
 - Show complete changed pages at one document-wide scale.

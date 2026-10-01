@@ -72,8 +72,7 @@ This project has not been published to the VS Code Marketplace.
 
 ## Scope and limitations
 
-This is a **text change** tool, not a pixel diff. It does not detect image-only,
-vector-only, font, color or layout edits, and it does not perform OCR. Complex
+This is a **text change** tool, not a pixel diff. It does not detect raster-image-only, font or layout edits, and it does not perform OCR. Complex
 multi-column reading order, rotated pages and mathematical glyph extraction can
 produce imperfect alignment. Review important equations against the source.
 
@@ -110,3 +109,7 @@ Contributions and reproducible synthetic bug reports are welcome.
 ## Automatic refresh
 
 After comparing two PDFs, the extension watches both inputs and rebuilds the review after writes settle (default 1.5 seconds). Keep the review open in the recommended PDF viewer; it reloads when the generated PDF is replaced. Background refresh does not steal focus. The last pair is restored when the same workspace reopens. Disable `pdfContentDiff.autoRefresh` or adjust `pdfContentDiff.refreshDelay` in Settings. LaTeX must still compile the revised source PDF. Source PDFs are never modified.
+
+## Vector graphics and compact layout
+
+Vector drawing geometry, stroke and fill changes are outlined in blue. Identical translated drawing groups are reconciled across pages. Dense pages with more than 2,000 paths are compared as a single group; independent figure movements on those pages may be flagged. Raster image changes, text rendered inside images, clipping-only changes and transparency-group effects are not covered. Both documents share one content-bounds crop, derived from all pages rather than edited regions. Outer whitespace is trimmed, body text retains its original point size, and every sheet has the same dimensions.

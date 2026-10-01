@@ -86,7 +86,7 @@ class PDFChecks(unittest.TestCase):
     def test_no_changes_and_no_text(self):
         pdf(self.old,'Same text');pdf(self.new,'Same text')
         build(self.old,self.new,self.out)
-        with fitz.open(self.out) as doc:self.assertIn('No text changes',doc[0].get_text())
+        with fitz.open(self.out) as doc:self.assertIn('No text or vector graphics changes',doc[0].get_text())
         blank=self.root/'blank.pdf';pdf(blank,'')
         with self.assertRaises(ValueError):build(self.old,blank,self.root/'blank-review.pdf')
 
@@ -110,7 +110,25 @@ class PDFChecks(unittest.TestCase):
                         sizes.extend(s['size'] for s in line['spans'] if 'bottom context' in s['text'])
             self.assertEqual(len(sizes),6)
             self.assertLess(max(sizes)-min(sizes),0.001)
-            self.assertLess(max(sizes),12)
+            self.assertAlmostEqual(max(sizes),12,places=3)
+
+    def test_vector_geometry_color_and_movement(self):
+        def drawing(file,offset=0,width=80,color=(1,0,0),text=True):
+            doc=fitz.open();page=doc.new_page()
+            if text: page.insert_text((100,80),'Unchanged text')
+            page.draw_rect(fitz.Rect(100+offset,150+offset,100+offset+width,230+offset),color=color,fill=color)
+            doc.save(file);doc.close()
+        drawing(self.old);drawing(self.new,offset=50)
+        self.assertEqual(build(self.old,self.new,self.out)['graphicsChanges'],0)
+        drawing(self.new,width=90)
+        self.assertEqual(build(self.old,self.new,self.out)['graphicsChanges'],2)
+        drawing(self.new,color=(0,1,0))
+        self.assertEqual(build(self.old,self.new,self.out)['graphicsChanges'],2)
+        drawing(self.old,text=False);drawing(self.new,width=90,text=False)
+        info=build(self.old,self.new,self.out)
+        self.assertEqual(info['graphicsChanges'],2)
+        with fitz.open(self.out) as doc:
+            self.assertGreater(len(doc[0].get_drawings()),2)
 
 
 if __name__=='__main__':unittest.main()

@@ -17,6 +17,6 @@ content = '''<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.
 with ZipFile(target, 'w', ZIP_DEFLATED) as z:
     z.writestr('extension.vsixmanifest', manifest)
     z.writestr('[Content_Types].xml', content)
-    for name in ['package.json','extension.js','auto_refresh.js','backend.py','build_comparison.py','README.md','README.zh-CN.md','CHANGELOG.md','LICENSE','requirements.txt','docs/preview.png']:
+    for name in ['package.json','extension.js','auto_refresh.js','backend.py','graphics_diff.py','build_comparison.py','README.md','README.zh-CN.md','CHANGELOG.md','LICENSE','requirements.txt','docs/preview.png']:
         z.write(root/name,'extension/'+name)
 print(target)
